@@ -1,5 +1,5 @@
 import subprocess
-import os
+import sys
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -17,56 +17,56 @@ def run_command(command):
         capture_output=True,
         text=True
     )
-
     return result
+
+def get_commit_message(auto_mode):
+    if auto_mode:
+        return "fixed some bugs"
+    else:
+        return input("=> ")
+
+def check_git_result(result, command_name):
+    if result.returncode == 0:
+        print(f"git {command_name} is successful!")
+    else:
+        print(f"git {command_name} has failed.")
+        print(f"Details: {result.stderr.strip()}")
+        sys.exit(1)
 
 # pwdfoldr = subprocess.run(["pwd"], capture_output=True, text=True).stdout.strip()
 # ezafoldr = subprocess.run(["eza"], capture_output=True, text=True).stdout.strip()
 pwdfoldr = run_command(["pwd"]).stdout.strip()
 ezafoldr = run_command(["eza"]).stdout.strip()
-print(f"used folder: {pwdfoldr}")
-print(f"eza of folder: {ezafoldr}")
+print(f"used folder: n\
+        {pwdfoldr}")
+print(f"eza of folder: n\
+        {ezafoldr}")
 
+# GIT ADD
 print("proceed?")
 if args.auto or input("Y/N => ").strip().upper() == "Y":
     print("starting to add...")
     
     git_add_result = run_command(["git", "add", "."])
+    check_git_result(git_add_result, "add")
     
-    if git_add_result.returncode == 0:
-        print("git add is succesful!")
-    else:
-        print("git add . has failed!")
-        print(f"Details: {git_add_result.stderr.strip()}")
-        exit()
-    
+    # GIT COMMIT
     print("continuing!")
-    if args.auto:
-        commit_msg = "fixed some bugs"
-    else:    
-        print("what to commit?")
-        commit_msg = input("=> ")
-    git_commit_result = run_command(["git", "commit", "-m", commit_msg])
-    
-    if git_commit_result.returncode == 0:
-        print("git commit is succesful!")
-    else:
-        print("git commit has failed.")
-        print(f"Details: {git_commit_result.stderr.strip()}")
-        exit()
+    commit_msg = get_commit_message(args.auto)
 
+    git_commit_result = run_command(["git", "commit", "-m", commit_msg])
+    check_git_result(git_commit_result, "commit")
+    
+    # GIT PUSHING
     print("continuing!")
     print("pushing...")
 
     git_push_result = run_command(["git", "push", "-u", "origin", "main"])
     
-    if git_push_result.returncode == 0:
-        print("git commit is succesful!")
-        print(f"Details: {git_push_result.stderr.strip()}")
-        notify = run_command(["notify-send", "hallo!", "pushing is complete, go check!"]) 
-    else:
-        print("git push has failed.")
-        print(f"Details: {git_push_result.stderr.strip()}")
-        exit()
+    check_git_result(git_push_result, "push")
+    notify = run_command(["notify-send", "hallo!", "pushing is complete, go check!"]) 
 
+else:
+    print("then go fuck urself")
+    sys.exit(1)
 
